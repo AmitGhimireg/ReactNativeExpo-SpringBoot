@@ -21,8 +21,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
   // Change this to your machine's local IP when testing on a physical device.
   // Android emulator:   http://10.0.2.2:8080
   // iOS simulator:      http://localhost:8080
-  // export const BASE_URL = "http://192.168.100.34:8080";
-   export const BASE_URL = "http://localhost:8080";
+
+  //  export const BASE_URL = "http://localhost:8080";
+export const BASE_URL = "http://192.168.100.34:8080";
 
 const ACCESS_TOKEN_KEY  = "access_token";
 const REFRESH_TOKEN_KEY = "refresh_token";  // ADDED
