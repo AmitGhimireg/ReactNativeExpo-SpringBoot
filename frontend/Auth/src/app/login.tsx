@@ -1,11 +1,22 @@
 import React, { useState } from "react";
 import {
-  View, Text, TextInput, TouchableOpacity,
-  StyleSheet, ActivityIndicator, KeyboardAvoidingView,
-  Platform, ScrollView,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
 } from "react-native";
 import { router } from "expo-router";
-import { authApi, saveAccessToken, saveRefreshToken, saveUser } from "../utils/api";
+import {
+  authApi,
+  saveAccessToken,
+  saveRefreshToken,
+  saveUser,
+} from "../utils/api";
 
 /**
  * login.tsx — Login screen.
@@ -20,55 +31,66 @@ import { authApi, saveAccessToken, saveRefreshToken, saveUser } from "../utils/a
  * the access token when it expires (no re-login required for 7 days).
  */
 export default function Login() {
-  const [email, setEmail]       = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading]   = useState(false);
-  const [error, setError]       = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleLogin = async () => {
-    setError("");
+const handleLogin = async () => {
+  setError("");
 
-    // Client-side validation
-    if (!email.trim() || !password.trim()) {
-      setError("Email and password are required.");
+  if (!email.trim() || !password.trim()) {
+    setError("Email and password are required.");
+    return;
+  }
+
+  if (!email.includes("@")) {
+    setError("Please enter a valid email address.");
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    const res = await authApi.login(email.trim().toLowerCase(), password);
+
+    await saveAccessToken(res.accessToken);
+    await saveRefreshToken(res.refreshToken);
+
+    await saveUser({
+      email: res.email,
+      fullName: res.fullName,
+      emailVerified: res.emailVerified,
+    });
+
+    router.replace("/home");
+  } catch (err: any) {
+    const msg =
+      err?.message ||
+      "Login failed. Please try again.";
+
+    // ✅ HANDLE EMAIL VERIFICATION BLOCK
+    if (msg.toLowerCase().includes("verify your email")) {
+      setError("Please verify your email before logging in.");
       return;
     }
-    if (!email.includes("@")) {
-      setError("Please enter a valid email address.");
-      return;
-    }
 
-    setLoading(true);
-    try {
-      const data = await authApi.login(email.trim().toLowerCase(), password);
-
-      // Save access token (JWT) — used in Authorization header for API calls
-      await saveAccessToken(data.accessToken);
-
-      // ADDED: Save refresh token (UUID) — used to renew the access token silently
-      await saveRefreshToken(data.refreshToken);
-
-      // Cache user info for the home screen
-      await saveUser({
-        email:         data.email,
-        fullName:      data.fullName,
-        emailVerified: data.emailVerified,  // ADDED
-      });
-
-      router.replace("/home");
-    } catch (err: any) {
-      setError(err.message || "Login failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+    // ❌ DEFAULT ERROR
+    setError(msg);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={styles.title}>Welcome Back</Text>
         <Text style={styles.subtitle}>Sign in to your account</Text>
 
@@ -104,13 +126,16 @@ export default function Login() {
           onPress={handleLogin}
           disabled={loading}
         >
-          {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Login</Text>}
+          {loading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.btnText}>Login</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity onPress={() => router.push("/register")}>
           <Text style={styles.link}>
-            Don't have an account?{" "}
-            <Text style={styles.linkBold}>Register</Text>
+            Don't have an account? <Text style={styles.linkBold}>Register</Text>
           </Text>
         </TouchableOpacity>
       </ScrollView>
@@ -119,16 +144,52 @@ export default function Login() {
 }
 
 const styles = StyleSheet.create({
-  container:      { flexGrow: 1, justifyContent: "center", padding: 24, backgroundColor: "#f9f9f9" },
-  title:          { fontSize: 30, fontWeight: "bold", marginBottom: 6, textAlign: "center", color: "#1a1a1a" },
-  subtitle:       { fontSize: 15, color: "#888", textAlign: "center", marginBottom: 28 },
-  label:          { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 6 },
-  input:          { borderWidth: 1, borderColor: "#ddd", backgroundColor: "#fff", padding: 13, marginBottom: 16, borderRadius: 10, fontSize: 15 },
-  button:         { backgroundColor: "#4CAF50", padding: 15, borderRadius: 10, alignItems: "center", marginTop: 4, marginBottom: 20 },
+  container: {
+    flexGrow: 1,
+    justifyContent: "center",
+    padding: 24,
+    backgroundColor: "#f9f9f9",
+  },
+  title: {
+    fontSize: 30,
+    fontWeight: "bold",
+    marginBottom: 6,
+    textAlign: "center",
+    color: "#1a1a1a",
+  },
+  subtitle: {
+    fontSize: 15,
+    color: "#888",
+    textAlign: "center",
+    marginBottom: 28,
+  },
+  label: { fontSize: 14, fontWeight: "600", color: "#333", marginBottom: 6 },
+  input: {
+    borderWidth: 1,
+    borderColor: "#ddd",
+    backgroundColor: "#fff",
+    padding: 13,
+    marginBottom: 16,
+    borderRadius: 10,
+    fontSize: 15,
+  },
+  button: {
+    backgroundColor: "#4CAF50",
+    padding: 15,
+    borderRadius: 10,
+    alignItems: "center",
+    marginTop: 4,
+    marginBottom: 20,
+  },
   buttonDisabled: { opacity: 0.7 },
-  btnText:        { color: "#fff", fontWeight: "bold", fontSize: 16 },
-  link:           { textAlign: "center", color: "#555", fontSize: 14 },
-  linkBold:       { color: "#4CAF50", fontWeight: "bold" },
-  errorBox:       { backgroundColor: "#ffe0e0", borderRadius: 8, padding: 12, marginBottom: 16 },
-  errorText:      { color: "#c0392b", fontSize: 13, textAlign: "center" },
+  btnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  link: { textAlign: "center", color: "#555", fontSize: 14 },
+  linkBold: { color: "#4CAF50", fontWeight: "bold" },
+  errorBox: {
+    backgroundColor: "#ffe0e0",
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: { color: "#c0392b", fontSize: 13, textAlign: "center" },
 });
