@@ -134,4 +134,9 @@ export const authApi = {
     api("/api/auth/logout", "POST", { refreshToken }),
 
   profile: () => api("/api/auth/profile", "GET", null, true),
+
+  // ADDED: role-protected endpoints (see SecurityConfig on the backend)
+  adminDashboard: () => api("/api/admin/dashboard", "GET", null, true),
+  adminUsers: () => api("/api/admin/users", "GET", null, true),
+  clientDashboard: () => api("/api/client/dashboard", "GET", null, true),
 };

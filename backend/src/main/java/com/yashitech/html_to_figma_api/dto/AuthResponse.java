@@ -18,18 +18,20 @@ public class AuthResponse {
     private String refreshToken;    // ADDED
     private String email;
     private String fullName;
+    private String role;            // ADDED: "ADMIN" or "CLIENT"
     private String message;
     private boolean emailVerified;  // ADDED
 
     public AuthResponse() {}
 
     public AuthResponse(String accessToken, String refreshToken,
-                        String email, String fullName,
+                        String email, String fullName, String role,
                         String message, boolean emailVerified) {
         this.accessToken   = accessToken;
         this.refreshToken  = refreshToken;
         this.email         = email;
         this.fullName      = fullName;
+        this.role          = role;
         this.message       = message;
         this.emailVerified = emailVerified;
     }
@@ -42,6 +44,8 @@ public class AuthResponse {
     public void setEmail(String e)              { this.email = e; }
     public String getFullName()                 { return fullName; }
     public void setFullName(String n)           { this.fullName = n; }
+    public String getRole()                     { return role; }
+    public void setRole(String r)               { this.role = r; }
     public String getMessage()                  { return message; }
     public void setMessage(String m)            { this.message = m; }
     public boolean isEmailVerified()            { return emailVerified; }

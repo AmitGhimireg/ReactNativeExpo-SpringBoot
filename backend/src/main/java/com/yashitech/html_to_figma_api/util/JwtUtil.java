@@ -48,12 +48,17 @@ public class JwtUtil {
     /**
      * Creates a short-lived JWT access token.
      * The email is stored as the JWT "subject" claim.
+     * MODIFIED: also embeds the user's role as a claim so the frontend can
+     * read it without an extra request. Note that actual route protection is
+     * still enforced server-side from the DB (see UserService.loadUserByUsername),
+     * not from this claim — so changing a role takes effect on the next request.
      * Frontend sends: Authorization: Bearer <accessToken>
      */
-    public String generateAccessToken(String email) {
+    public String generateAccessToken(String email, String role) {
         return Jwts.builder()
                 .subject(email)
                 .claim("type", "access")
+                .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(getSigningKey())
@@ -77,6 +82,11 @@ public class JwtUtil {
     // ── Extract email from JWT ────────────────────────────────────────────────
     public String extractEmail(String token) {
         return parseClaims(token).getSubject();
+    }
+
+    // ADDED: Extract role claim from JWT (for display purposes on the frontend).
+    public String extractRole(String token) {
+        return parseClaims(token).get("role", String.class);
     }
 
     // ── Validate access token ─────────────────────────────────────────────────

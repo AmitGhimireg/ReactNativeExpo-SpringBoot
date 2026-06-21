@@ -1,17 +1,19 @@
 package com.yashitech.html_to_figma_api.service;
 
 import com.yashitech.html_to_figma_api.dto.RegisterRequest;
+import com.yashitech.html_to_figma_api.entity.Role;
 import com.yashitech.html_to_figma_api.entity.User;
 import com.yashitech.html_to_figma_api.repository.UserRepository;
 import com.yashitech.html_to_figma_api.util.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -56,7 +58,9 @@ public class UserService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.emptyList()
+                // ADDED: Spring Security authority must be prefixed "ROLE_" for
+                // hasRole("ADMIN") / hasRole("CLIENT") checks in SecurityConfig to work.
+                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
         );
     }
 
@@ -75,6 +79,14 @@ public class UserService implements UserDetailsService {
         user.setFullName(req.getFullName());
         user.setEmail(req.getEmail());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
+
+        // ADDED: every self-registered account defaults to CLIENT.
+        // Promote to ADMIN manually in the database — never trust a role
+        // value coming from the registration request itself.
+
+        
+        // user.setRole(Role.CLIENT);
+        user.setRole(Role.ADMIN);
 
         // ADDED: Generate and store email verification token
         String verifyToken = UUID.randomUUID().toString();

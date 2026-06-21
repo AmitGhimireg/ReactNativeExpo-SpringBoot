@@ -65,6 +65,14 @@ public class User {
     @Column(name = "refresh_token_expiry")
     private LocalDateTime refreshTokenExpiry;
 
+    // ── Role (ADDED for role-based access control) ──────────────────────────────
+    // Every new registration defaults to CLIENT (set explicitly in UserService).
+    // Promote a user to ADMIN manually in the database:
+    //   UPDATE users SET role = 'ADMIN' WHERE email = '...';
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private Role role = Role.CLIENT;
+
     // ── Getters & Setters ─────────────────────────────────────────────────────
 
     public Long getId()                        { return id; }
@@ -93,4 +101,7 @@ public class User {
 
     public LocalDateTime getRefreshTokenExpiry()         { return refreshTokenExpiry; }
     public void setRefreshTokenExpiry(LocalDateTime d)   { this.refreshTokenExpiry = d; }
+
+    public Role getRole()                      { return role; }
+    public void setRole(Role role)             { this.role = role; }
 }

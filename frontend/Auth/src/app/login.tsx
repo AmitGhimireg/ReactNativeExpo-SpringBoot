@@ -61,9 +61,11 @@ const handleLogin = async () => {
       email: res.email,
       fullName: res.fullName,
       emailVerified: res.emailVerified,
+      role: res.role,            // ADDED: "ADMIN" or "CLIENT"
     });
 
-    router.replace("/home");
+    // ADDED: route to the screen that matches the user's role
+    router.replace(res.role === "ADMIN" ? "/admin" : "/home");
   } catch (err: any) {
     const msg =
       err?.message ||

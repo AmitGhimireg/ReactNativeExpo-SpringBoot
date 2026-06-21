@@ -64,7 +64,7 @@ public class AuthController {
                             "emailVerified", false));
         }
 
-        String accessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String accessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name());
         String refreshToken = jwtUtil.generateRefreshToken();
 
         userService.saveRefreshToken(user, refreshToken);
@@ -74,6 +74,7 @@ public class AuthController {
                 "refreshToken", refreshToken,
                 "email", user.getEmail(),
                 "fullName", user.getFullName(),
+                "role", user.getRole().name(),
                 "emailVerified", user.isEmailVerified()));
     }
 
@@ -91,14 +92,15 @@ public class AuthController {
             return ResponseEntity.status(401).body(Map.of("message", "Expired refresh token"));
         }
 
-        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail());
+        String newAccessToken = jwtUtil.generateAccessToken(user.getEmail(), user.getRole().name());
         String newRefreshToken = jwtUtil.generateRefreshToken();
 
         userService.saveRefreshToken(user, newRefreshToken);
 
         return ResponseEntity.ok(Map.of(
                 "accessToken", newAccessToken,
-                "refreshToken", newRefreshToken));
+                "refreshToken", newRefreshToken,
+                "role", user.getRole().name()));
     }
 
     // VERIFY EMAIL
@@ -138,6 +140,7 @@ public class AuthController {
         return ResponseEntity.ok(Map.of(
                 "email", user.getEmail(),
                 "fullName", user.getFullName(),
+                "role", user.getRole().name(),
                 "emailVerified", user.isEmailVerified()));
     }
 }

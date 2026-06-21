@@ -13,6 +13,12 @@ export default function Home() {
   const load = async () => {
     try {
       const data = await authApi.profile();
+      // ADDED: this screen is for CLIENT users — if an Admin lands here
+      // (e.g. stale cache, deep link), send them to their own dashboard.
+      if (data.role === "ADMIN") {
+        router.replace("/admin");
+        return;
+      }
       setUser(data);
     } catch {
       await clearAuth();
@@ -51,6 +57,7 @@ export default function Home() {
         <Text style={styles.title}>Welcome</Text>
         <Text>{user?.fullName}</Text>
         <Text>{user?.email}</Text>
+        <Text style={styles.roleTag}>Role: {user?.role}</Text>
 
         {!user?.emailVerified ? (
           <Text style={styles.warn}>Verify your email</Text>
@@ -80,6 +87,7 @@ const styles = StyleSheet.create({
   navText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   body: { flex: 1, padding: 20, alignItems: "center", justifyContent: "center" },
   title: { fontSize: 24, marginBottom: 10 },
+  roleTag: { color: "#1e90ff", fontWeight: "600", marginTop: 4 },
   warn: { color: "#ff8c00", marginTop: 10 },
   ok: { color: "#2e8b57", marginTop: 10 },
   footer: { padding: 20, borderTopWidth: 1, borderColor: "#eee" },

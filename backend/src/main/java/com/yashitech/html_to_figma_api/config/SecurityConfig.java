@@ -116,6 +116,12 @@ public class SecurityConfig {
                     "/api/auth/verify-email",   // ADDED: click link from email
                     "/health"
                 ).permitAll()
+                // ADDED: role-based route protection.
+                // Authorities are loaded fresh from the DB on every request
+                // (see UserService.loadUserByUsername), so a role change takes
+                // effect immediately — no need to wait for the JWT to expire.
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                .requestMatchers("/api/client/**").hasAnyRole("ADMIN", "CLIENT")
                 // Everything else requires a valid access token
                 .anyRequest().authenticated()
             )
